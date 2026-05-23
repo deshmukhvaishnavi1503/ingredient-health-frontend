@@ -1,118 +1,248 @@
-import React, { useRef, useState, useCallback, useEffect } from "react";
+import React, {
+  useRef,
+  useState,
+  useCallback,
+  useEffect,
+} from "react";
+
 import WebcamCapture from "./components/WebcamCapture";
 import ImageUploader from "./components/ImageUploader";
 import ModeSelection from "./components/ModeSelection";
 import ImagePreview from "./components/ImagePreview";
 import AnalysisResult from "./components/AnalysisResult";
 import HowItWorks from "./components/HowItWorks";
-import { compressImage, detectDeviceCapabilities } from "./utils/imageUtils";
+
+import {
+  compressImage,
+  detectDeviceCapabilities,
+} from "./utils/imageUtils";
 
 function App() {
+
   const webcamRef = useRef(null);
 
   const [imageSrc, setImageSrc] = useState(null);
-  const [mode, setMode] = useState(null);
-  const [errorMessage, setErrorMessage] = useState(null);
-  const [deviceCapabilities, setDeviceCapabilities] = useState(null);
-  const [fullResults, setFullResults] = useState(null);
 
-  const [processingState, setProcessingState] = useState({
-    isProcessing: false,
-    status: "",
-    progress: 0,
-  });
+  const [mode, setMode] =
+    useState(null);
 
-  // Detect device capabilities
+  const [errorMessage,
+    setErrorMessage] =
+    useState(null);
+
+  const [deviceCapabilities,
+    setDeviceCapabilities] =
+    useState(null);
+
+  const [fullResults,
+    setFullResults] =
+    useState(null);
+
+  const [processingState,
+    setProcessingState] =
+    useState({
+      isProcessing: false,
+      status: "",
+      progress: 0,
+    });
+
+  /* ===============================
+     DEVICE DETECTION
+  ================================= */
+
   useEffect(() => {
-    const capabilities = detectDeviceCapabilities();
+
+    const capabilities =
+      detectDeviceCapabilities();
+
     setDeviceCapabilities(capabilities);
-    console.log("📱 Device capabilities:", capabilities);
+
+    console.log(
+      "📱 Device capabilities:",
+      capabilities
+    );
+
   }, []);
 
-  // ✅ UPDATED: Hardcoded Render backend URL
-  const getApiUrl = useCallback(() => {
-    return "https://ingredient-health-backend.onrender.com";
-  }, []);
+  /* ===============================
+     API URL
+  ================================= */
 
-  const startBackgroundProcessing = useCallback(
-    async (imageData) => {
+  const getApiUrl =
+    useCallback(() => {
+
+      return "https://ingredient-health-backend.onrender.com";
+
+
+    }, []);
+
+  /* ===============================
+     BACKEND PROCESS
+  ================================= */
+
+  const startBackgroundProcessing =
+    useCallback(async (imageData) => {
+
       setProcessingState({
         isProcessing: true,
-        status: "🔄 Processing image...",
+        status:
+          "🔄 Analyzing ingredients...",
         progress: 30,
       });
 
       setErrorMessage(null);
 
       try {
-        const API = getApiUrl();
 
-        const controller = new AbortController();
-       const timeoutId = setTimeout(() => controller.abort(), 60000);
-        const response = await fetch(`${API}/api/analyze`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ image: imageData }),
-          signal: controller.signal,
-        });
+        const controller =
+          new AbortController();
 
-        clearTimeout(timeoutId);
+        const timeout =
+          setTimeout(() => {
+            controller.abort();
+          }, 60000);
+
+        const response =
+          await fetch(
+            `${getApiUrl()}/analyze`,
+            {
+              method: "POST",
+
+              headers: {
+                "Content-Type":
+                  "application/json",
+              },
+
+              body: JSON.stringify({
+                image: imageData,
+              }),
+
+              signal:
+                controller.signal,
+            }
+          );
+
+        clearTimeout(timeout);
 
         if (!response.ok) {
-          throw new Error(`Server error: ${response.status}`);
+
+          throw new Error(
+            `Server error: ${response.status}`
+          );
         }
 
-        const result = await response.json();
-        console.log("🔥 BACKEND RESULT:", result);
+        const result =
+          await response.json();
 
-        const data = result.data || {};
+        console.log(
+          "🔥 FULL BACKEND RESPONSE:",
+          result
+        );
 
-        const formattedHealthScore = {
-          score: data.healthScore || 0,
-          breakdown: null,
-        };
+        if (!result.success) {
 
-        let formattedAnalysis = [];
-
-        if (Array.isArray(data.analysis)) {
-          formattedAnalysis = data.analysis.map((item) => {
-            if (typeof item === "string") {
-              return {
-                ingredient: item,
-                status: "Neutral",
-                reason: "Detected from product label",
-                concerns: [],
-              };
-            }
-            return item;
-          });
+          throw new Error(
+            "Backend returned failure"
+          );
         }
+
+        const data = result.data;
+
+        console.log(
+          "✅ FINAL DATA:",
+          data
+        );
+
+        /* ===============================
+           FIXED DATA MAPPING
+        ================================= */
 
         setFullResults({
-          healthScore: formattedHealthScore,
-          category: data.category || "Unknown",
-          allergens: data.allergens || [],
-          processingTime: data.processingTime || "N/A",
-          analysis: formattedAnalysis,
+
+          /* HEALTH SCORE */
+          healthScore: {
+            score:
+              data.healthScore || 0,
+          },
+
+          /* RISK CATEGORY */
+          category:
+            data.riskLevel || "Unknown",
+
+          /* PROCESS TIME */
+          processingTime:
+            data.processingTime || 0,
+
+          /* TOTAL INGREDIENTS */
+          totalIngredients:
+            data.totalIngredients || 0,
+
+          /* DETAILED ANALYSIS */
+          analysis:
+            Array.isArray(data.analysis)
+              ? data.analysis
+              : [],
+
+          /* GROUPED ANALYSIS */
+          groupedAnalysis: {
+
+            healthy:
+              data.groupedAnalysis
+                ?.healthy || [],
+
+            moderate:
+              data.groupedAnalysis
+                ?.moderate || [],
+
+            harmful:
+              data.groupedAnalysis
+                ?.harmful || [],
+
+            additives:
+              data.groupedAnalysis
+                ?.additives || [],
+
+            allergens:
+              data.groupedAnalysis
+                ?.allergens || [],
+          },
+
+          /* ALLERGENS */
+          allergens:
+            data.groupedAnalysis
+              ?.allergens || [],
+
+          /* HEALTH ADVICE */
+          advice:
+            data.advice ||
+            data.groupedAnalysis?.advice ||
+            "Consume processed foods in moderation.",
+
         });
 
         setProcessingState({
           isProcessing: false,
-          status: "✅ Analysis complete!",
+          status:
+            "✅ Analysis complete",
           progress: 100,
         });
 
       } catch (error) {
-        console.error("🔴 Backend Error:", error);
 
-        let errorMsg =
-          "❌ Could not connect to backend. Is server running?";
+        console.error(
+          "🔴 Backend Error:",
+          error
+        );
 
-        if (error.name === "AbortError") {
-          errorMsg = "❌ Request timed out. Try a smaller image.";
-        }
+        setErrorMessage(
 
-        setErrorMessage(errorMsg);
+          error.name === "AbortError"
+
+            ? "❌ Request timed out. Try smaller image."
+
+            : "❌ Could not connect to backend."
+
+        );
 
         setProcessingState({
           isProcessing: false,
@@ -120,63 +250,149 @@ function App() {
           progress: 0,
         });
       }
-    },
-    [getApiUrl]
-  );
 
-  const captureImage = useCallback(async () => {
-    const image = webcamRef.current?.getScreenshot();
+    }, [getApiUrl]);
 
-    if (!image) {
-      setErrorMessage("❌ Could not capture image.");
-      return;
-    }
+  /* ===============================
+     CAMERA CAPTURE
+  ================================= */
 
-    const compressed = await compressImage(image, 0.9, 2000);
-    setImageSrc(compressed);
-    startBackgroundProcessing(compressed);
-  }, [startBackgroundProcessing]);
+  const captureImage =
+    useCallback(async () => {
 
-  const handleUpload = useCallback(
-    (e) => {
-      const file = e.target.files[0];
+      const image =
+        webcamRef.current?.getScreenshot();
+
+      if (!image) {
+
+        setErrorMessage(
+          "❌ Could not capture image."
+        );
+
+        return;
+      }
+
+      const compressed =
+        await compressImage(
+          image,
+          0.9,
+          2000
+        );
+
+      setImageSrc(compressed);
+
+      startBackgroundProcessing(
+        compressed
+      );
+
+    }, [startBackgroundProcessing]);
+
+  /* ===============================
+     IMAGE UPLOAD
+  ================================= */
+
+  const handleUpload =
+    useCallback((e) => {
+
+      const file =
+        e.target.files[0];
+
       if (!file) return;
 
-      const reader = new FileReader();
-      reader.onloadend = async () => {
-        const compressed = await compressImage(reader.result, 0.9, 2000);
-        setImageSrc(compressed);
-        startBackgroundProcessing(compressed);
-      };
+      const reader =
+        new FileReader();
+
+      reader.onloadend =
+        async () => {
+
+          const compressed =
+            await compressImage(
+              reader.result,
+              0.9,
+              2000
+            );
+
+          setImageSrc(compressed);
+
+          startBackgroundProcessing(
+            compressed
+          );
+        };
 
       reader.readAsDataURL(file);
-    },
-    [startBackgroundProcessing]
-  );
 
-  const reset = useCallback(() => {
-    setImageSrc(null);
-    setMode(null);
-    setFullResults(null);
-    setErrorMessage(null);
-    setProcessingState({
-      isProcessing: false,
-      status: "",
-      progress: 0,
-    });
-  }, []);
+    }, [startBackgroundProcessing]);
+
+  /* ===============================
+     RESET
+  ================================= */
+
+  const reset =
+    useCallback(() => {
+
+      setImageSrc(null);
+
+      setMode(null);
+
+      setFullResults(null);
+
+      setErrorMessage(null);
+
+      setProcessingState({
+        isProcessing: false,
+        status: "",
+        progress: 0,
+      });
+
+    }, []);
+
+  /* ===============================
+     UI
+  ================================= */
 
   return (
+
     <div className="min-h-screen bg-gray-100 p-4">
-      <div className="max-w-4xl mx-auto bg-white rounded-2xl p-6 shadow-lg space-y-6">
-        <h1 className="text-3xl font-bold text-center text-blue-700">
-          AI Ingredient Analyzer
-        </h1>
 
-        {!mode && <HowItWorks />}
-        {!mode && <ModeSelection setMode={setMode} />}
+      <div className="max-w-5xl mx-auto bg-white rounded-2xl p-6 shadow-lg space-y-6">
 
-        {mode === "camera" && !imageSrc && (
+        {/* HEADER */}
+
+        <div className="text-center">
+
+          <h1 className="text-4xl font-bold text-blue-700">
+
+            AI Ingredient Analyzer
+
+          </h1>
+
+          <p className="text-gray-600 mt-2">
+
+            Real-Time Ingredient Health Scoring Engine
+
+          </p>
+
+        </div>
+
+        {/* HOW IT WORKS */}
+
+        {!mode && (
+          <HowItWorks />
+        )}
+
+        {/* MODE SELECT */}
+
+        {!mode && (
+          <ModeSelection
+            setMode={setMode}
+          />
+        )}
+
+        {/* CAMERA */}
+
+        {mode === "camera" &&
+          !imageSrc && (
+
           <WebcamCapture
             webcamRef={webcamRef}
             onCapture={captureImage}
@@ -184,34 +400,84 @@ function App() {
           />
         )}
 
-        {mode === "upload" && !imageSrc && (
-          <ImageUploader handleUpload={handleUpload} onBack={reset} />
+        {/* IMAGE UPLOAD */}
+
+        {mode === "upload" &&
+          !imageSrc && (
+
+          <ImageUploader
+            handleUpload={handleUpload}
+            onBack={reset}
+          />
         )}
 
+        {/* IMAGE PREVIEW */}
+
         {imageSrc && (
+
           <ImagePreview
             imageSrc={imageSrc}
             onReset={reset}
-            processingState={processingState}
+            processingState={
+              processingState
+            }
           />
         )}
 
+        {/* ERROR */}
+
         {errorMessage && (
-          <div className="text-red-600 bg-red-100 p-3 rounded text-center">
+
+          <div className="text-red-600 bg-red-100 border border-red-200 p-4 rounded-xl text-center font-medium">
+
             {errorMessage}
+
           </div>
         )}
 
+        {/* FINAL RESULTS */}
+
         {fullResults && (
+
           <AnalysisResult
-            analysis={fullResults.analysis}
-            healthScore={fullResults.healthScore}
-            category={fullResults.category}
-            allergens={fullResults.allergens}
-            processingTime={fullResults.processingTime}
+
+            analysis={
+              fullResults.analysis
+            }
+
+            groupedAnalysis={
+              fullResults.groupedAnalysis
+            }
+
+            advice={
+              fullResults.advice
+            }
+
+            healthScore={
+              fullResults.healthScore
+            }
+
+            category={
+              fullResults.category
+            }
+
+            allergens={
+              fullResults.allergens
+            }
+
+            processingTime={
+              fullResults.processingTime
+            }
+
+            totalIngredients={
+              fullResults.totalIngredients
+            }
+
           />
         )}
+
       </div>
+
     </div>
   );
 }

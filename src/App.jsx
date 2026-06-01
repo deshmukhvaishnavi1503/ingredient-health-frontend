@@ -68,14 +68,11 @@ function App() {
      API URL
   ================================= */
 
-  const getApiUrl =
-    useCallback(() => {
-
-      return "https://ingredient-health-backend.onrender.com";
-
-
-    }, []);
-
+  const getApiUrl = useCallback(() => {
+  return window.location.hostname === "localhost"
+    ? "http://localhost:5001/api"
+    : "https://ingredient-health-backend.onrender.com/api";
+}, []);
   /* ===============================
      BACKEND PROCESS
   ================================= */

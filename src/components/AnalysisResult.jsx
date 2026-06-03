@@ -68,6 +68,8 @@ const AnalysisResult = ({
 
           <div className="text-center space-y-4">
 
+            {/* SCORE */}
+
             <div>
 
               <div
@@ -87,6 +89,8 @@ const AnalysisResult = ({
 
             </div>
 
+            {/* RISK LEVEL */}
+
             <div>
 
               <span
@@ -99,10 +103,14 @@ const AnalysisResult = ({
 
             </div>
 
+            {/* PROCESSING TIME */}
+
             {processingTime && (
 
               <div className="text-sm text-gray-600 bg-white rounded-lg px-4 py-2 inline-block shadow-sm">
+
                 ⚡ Analyzed in {processingTime}ms
+
               </div>
 
             )}
@@ -134,7 +142,9 @@ const AnalysisResult = ({
           </div>
 
           <div className="text-4xl font-black text-blue-600">
+
             {totalIngredients}
+
           </div>
 
         </div>
@@ -185,112 +195,133 @@ const AnalysisResult = ({
       <div className="grid md:grid-cols-2 gap-4">
 
         {/* HEALTHY */}
+
         <div className="bg-green-50 border border-green-200 rounded-2xl p-5 shadow-md">
 
           <h3 className="text-green-700 font-bold text-lg mb-4">
+
             ✅ Healthy
+
           </h3>
 
           {groupedAnalysis.healthy?.length ? (
+
             groupedAnalysis.healthy.map((item, idx) => (
-              <div key={idx} className="bg-white border border-green-100 rounded-lg px-3 py-2 mb-2">
+
+              <div
+                key={idx}
+                className="bg-white border border-green-100 rounded-lg px-3 py-2 mb-2"
+              >
                 {item}
               </div>
+
             ))
+
           ) : (
+
             <p className="text-gray-600">
               No healthy ingredients detected
             </p>
+
           )}
 
         </div>
 
         {/* MODERATE */}
+
         <div className="bg-yellow-50 border border-yellow-200 rounded-2xl p-5 shadow-md">
 
           <h3 className="text-yellow-700 font-bold text-lg mb-4">
+
             ⚠ Moderate
+
           </h3>
 
           {groupedAnalysis.moderate?.length ? (
+
             groupedAnalysis.moderate.map((item, idx) => (
-              <div key={idx} className="bg-white border border-yellow-100 rounded-lg px-3 py-2 mb-2">
+
+              <div
+                key={idx}
+                className="bg-white border border-yellow-100 rounded-lg px-3 py-2 mb-2"
+              >
                 {item}
               </div>
+
             ))
+
           ) : (
+
             <p className="text-gray-600">
               No moderate ingredients
             </p>
+
           )}
 
         </div>
 
         {/* HARMFUL */}
+
         <div className="bg-red-50 border border-red-200 rounded-2xl p-5 shadow-md">
 
           <h3 className="text-red-700 font-bold text-lg mb-4">
+
             ❌ Harmful
+
           </h3>
 
           {groupedAnalysis.harmful?.length ? (
+
             groupedAnalysis.harmful.map((item, idx) => (
-              <div key={idx} className="bg-white border border-red-100 rounded-lg px-3 py-2 mb-2">
+
+              <div
+                key={idx}
+                className="bg-white border border-red-100 rounded-lg px-3 py-2 mb-2"
+              >
                 {item}
               </div>
+
             ))
+
           ) : (
+
             <p className="text-gray-600">
               No harmful ingredients
             </p>
+
           )}
 
         </div>
 
         {/* ADDITIVES */}
+
         <div className="bg-purple-50 border border-purple-200 rounded-2xl p-5 shadow-md">
 
           <h3 className="text-purple-700 font-bold text-lg mb-4">
+
             🧪 Additives
+
           </h3>
 
           {groupedAnalysis.additives?.length ? (
+
             groupedAnalysis.additives.map((item, idx) => (
-              <div key={idx} className="bg-white border border-purple-100 rounded-lg px-3 py-2 mb-2">
-                {item}
-              </div>
-            ))
-          ) : (
-            <p className="text-gray-600">
-              No additives detected
-            </p>
-          )}
 
-        </div>
-
-        {/* ===============================
-            UNCLASSIFIED (ADDED)
-        ================================= */}
-
-        <div className="bg-gray-50 border border-gray-200 rounded-2xl p-5 shadow-md">
-
-          <h3 className="text-gray-700 font-bold text-lg mb-4">
-            ❓ Unclassified
-          </h3>
-
-          {groupedAnalysis.unclassified?.length ? (
-            groupedAnalysis.unclassified.map((item, idx) => (
               <div
                 key={idx}
-                className="bg-white border border-gray-200 rounded-lg px-3 py-2 mb-2"
+                className="bg-white border border-purple-100 rounded-lg px-3 py-2 mb-2"
               >
                 {item}
               </div>
+
             ))
+
           ) : (
+
             <p className="text-gray-600">
-              No unclassified ingredients
+              No additives detected
             </p>
+
           )}
 
         </div>
@@ -308,7 +339,9 @@ const AnalysisResult = ({
           🧠 Detailed Analysis
 
           <span className="text-sm font-normal text-gray-600 bg-gray-100 px-3 py-1 rounded-full">
+
             {analysis?.length || 0} ingredients
+
           </span>
 
         </h2>
@@ -326,7 +359,9 @@ const AnalysisResult = ({
                 <div className="flex justify-between items-start gap-3 mb-3">
 
                   <h3 className="font-semibold text-gray-900 text-sm sm:text-base flex-1">
+
                     {item.ingredient}
+
                   </h3>
 
                   <span
@@ -335,10 +370,13 @@ const AnalysisResult = ({
                     ${
                       item.category === "Healthy"
                         ? "bg-green-100 text-green-800 border border-green-200"
+
                         : item.category === "Moderate"
                         ? "bg-yellow-100 text-yellow-800 border border-yellow-200"
+
                         : item.category === "Harmful"
                         ? "bg-red-100 text-red-800 border border-red-200"
+
                         : "bg-purple-100 text-purple-800 border border-purple-200"
                     }
                   `}
@@ -349,7 +387,9 @@ const AnalysisResult = ({
                 </div>
 
                 <p className="text-sm text-gray-700 leading-relaxed">
+
                   {item.reason}
+
                 </p>
 
               </div>
@@ -369,11 +409,15 @@ const AnalysisResult = ({
         <div className="bg-blue-50 border-2 border-blue-200 rounded-2xl p-6 shadow-lg">
 
           <h3 className="text-blue-800 font-bold text-lg mb-4">
+
             💡 Health Advice
+
           </h3>
 
           <p className="text-gray-700 leading-relaxed">
+
             {advice}
+
           </p>
 
         </div>
@@ -387,14 +431,17 @@ const AnalysisResult = ({
       <div className="text-center bg-gradient-to-r from-blue-50 to-green-50 rounded-xl p-4 border border-gray-200">
 
         <p className="text-sm text-gray-700">
+
           💡 <strong>Analysis complete!</strong>
           Make informed choices for better health.
+
         </p>
 
       </div>
 
     </div>
+
   );
 };
 
-export default AnalysisResult;
+export default AnalysisResult; 
